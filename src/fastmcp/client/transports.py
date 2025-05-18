@@ -176,9 +176,12 @@ class StreamableHttpTransport(ClientTransport):
         # sse_read_timeout has a default value set, so we can't pass None without overriding it
         # instead we simply leave the kwarg out if it's not provided
         if self.sse_read_timeout is not None:
-            client_kwargs["sse_read_timeout"] = self.sse_read_timeout
+            client_kwargs["sse_read_timeout"] = self.sse_read_timeout.total_seconds()
         if session_kwargs.get("read_timeout_seconds", None) is not None:
-            client_kwargs["timeout"] = session_kwargs.get("read_timeout_seconds")
+            read_timeout_seconds = cast(
+                datetime.timedelta, session_kwargs.get("read_timeout_seconds")
+            )
+            client_kwargs["timeout"] = read_timeout_seconds.total_seconds()
 
         async with streamablehttp_client(
             self.url, headers=self.headers, **client_kwargs
